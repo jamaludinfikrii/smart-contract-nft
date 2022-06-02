@@ -1,8 +1,10 @@
+/* eslint-disable node/no-missing-import */
 import chaiAsPromised from "chai-as-promised";
 import chai from "chai";
 import { ethers } from "hardhat";
 import { deployContract } from "./utils";
 import { ERC721Starter } from "../typechain";
+import { BigNumber } from "ethers";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -84,5 +86,42 @@ describe("ERC721 Contract Starter", () => {
     await contract.connect(alice).setBaseURI("https://drive.google.com/");
     const newUri = await contract.connect(alice).tokenURI(0);
     expect(newUri).to.be.equal("https://drive.google.com/0.json");
+  });
+
+  it("should return correct token ids if `tokensOfOwner` invoked", async () => {
+    const [, alice, bob] = await ethers.getSigners();
+
+    const price = await contract.PRICE();
+
+    await contract.connect(alice).mint({
+      value: price,
+    });
+
+    await contract.connect(bob).mint({
+      value: price,
+    });
+
+    await contract.connect(bob).mint({
+      value: price,
+    });
+
+    await contract.connect(alice).mint({
+      value: price,
+    });
+
+    const aliceTokens = await contract
+      .connect(alice)
+      .tokensOfOwner(alice.address);
+
+    const bobTokens = await contract.connect(bob).tokensOfOwner(bob.address);
+
+    expect(aliceTokens).to.be.deep.equal([
+      BigNumber.from(0),
+      BigNumber.from(3),
+    ]);
+    expect(bobTokens).to.be.deep.equal([BigNumber.from(1), BigNumber.from(2)]);
+
+    // [0,3] token of alice
+    // [1,2] token of bob
   });
 });

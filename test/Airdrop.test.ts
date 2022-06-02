@@ -1,3 +1,4 @@
+/* eslint-disable node/no-missing-import */
 import chaiAsPromised from "chai-as-promised";
 import chai from "chai";
 import { ethers } from "hardhat";
